@@ -100,10 +100,12 @@ class _BufferedResponse(proxyForInterface(IResponse)):
 
 class HTTPClient(object):
     def __init__(self, agent, cookiejar=None,
-                 data_to_body_producer=IBodyProducer):
+                 data_to_body_producer=IBodyProducer,
+                 reactor=None):
         self._agent = agent
         self._cookiejar = cookiejar or cookiejar_from_dict({})
         self._data_to_body_producer = data_to_body_producer
+        self._reactor = reactor
 
     def get(self, url, **kwargs):
         """
@@ -240,7 +242,7 @@ class HTTPClient(object):
 
         timeout = kwargs.get('timeout')
         if timeout:
-            delayedCall = default_reactor(kwargs.get('reactor')).callLater(
+            delayedCall = default_reactor(kwargs.get('reactor') or self._reactor).callLater(
                 timeout, d.cancel)
 
             def gotResult(result):

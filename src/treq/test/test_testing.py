@@ -59,6 +59,14 @@ class StubbingTests(TestCase):
     """
     Tests for :class:`StubTreq`.
     """
+
+    def test_stubtreq_does_not_leak_timeouts(self):
+        stub = StubTreq(_NonResponsiveTestResource())
+        res = stub.get("http://lala", timeout=1)
+        # ...
+        from twisted.internet import reactor
+        self.assertEqual(reactor.getDelayedCalls(), [])
+        
     def test_stubtreq_provides_all_functions_in_treq_all(self):
         """
         Every single function and attribute exposed by :obj:`treq.__all__` is

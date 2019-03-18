@@ -79,12 +79,14 @@ class RequestTraversalAgent(object):
     request rather than going out to a real network socket.
     """
 
-    def __init__(self, rootResource):
+    def __init__(self, rootResource, reactor=None):
         """
         :param rootResource: The Twisted `IResource` at the root of the
             resource tree.
         """
-        self._memoryReactor = MemoryReactorClock()
+        if reactor is None:
+            reactor = MemoryReactorClock()
+        self._memoryReactor = reactor
         self._realAgent = Agent.usingEndpointFactory(
             reactor=self._memoryReactor,
             endpointFactory=_EndpointFactory(self._memoryReactor))
@@ -232,9 +234,11 @@ class StubTreq(object):
         :param resource: A :obj:`Resource` object that provides the fake
             responses
         """
-        _agent = RequestTraversalAgent(resource)
+        self._memoryReactor = MemoryReactorClock()
+        _agent = RequestTraversalAgent(resource, reactor=self._memoryReactor)
         _client = HTTPClient(agent=_agent,
-                             data_to_body_producer=_SynchronousProducer)
+                             data_to_body_producer=_SynchronousProducer,
+                             reactor=self._memoryReactor)
         for function_name in treq.__all__:
             function = getattr(_client, function_name, None)
             if function is None:
